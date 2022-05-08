@@ -4,7 +4,7 @@ from torchvision import transforms
 from mnist.data_loader import MNIST_modified
 from torchtext import data
 from torchtext.vocab import GloVe
-from imdb.data_loader import IMDB_modified, tokenizer_twolevel
+# from imdb.data_loader import IMDB_modified, tokenizer_twolevel
 
 class UnknownDatasetError(Exception):
     def __str__(self):
