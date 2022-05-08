@@ -14,6 +14,12 @@ conda env create SeojinBang/py36
 conda activate py36
 ```
 
+> Add by Rining:
+
+> Change the `prefix` of `environment.yml` to your path
+
+> Create env. by `conda env create -n temp` 
+
 See main.py for possible arguments.
 
 To learn a black-box model for MNIST digit recognition:
