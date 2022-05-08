@@ -61,38 +61,38 @@ def return_data(args):
         data_loader['x_type'] = torch.cuda.FloatTensor if args.cuda else torch.FloatTensor
         data_loader['y_type'] = torch.cuda.LongTensor if args.cuda else torch.LongTensor
         
-    elif name in ['imdb', 'IMDB']:
-
-        embedding_dim = 100
-        max_total_num_words = 20000
-        text = data.Field(tokenize = tokenizer_twolevel, 
-                          batch_first = True)
-        label = data.Field(lower = True)
-        label_pred = data.Field(use_vocab = False, fix_length = 1)
-        fname = data.Field(use_vocab = False, fix_length = 1)
-        
-        train, valid, test = IMDB_modified.splits(text, label, label_pred, fname,
-                                                  root = root, model_name = args.model_name,
-                                                  load_pred = args.load_pred)
-        print("build vocab...")
-        text.build_vocab(train, vectors = GloVe(name = '6B',
-                                                dim = embedding_dim,
-                                                cache = root), max_size = max_total_num_words)
-        label.build_vocab(train)
-        
-        print("Create Iterator objects for multiple splits of a dataset...")
-        train_loader, valid_loader, test_loader = data.Iterator.splits((train, valid, test),
-                                                                       batch_size = batch_size,
-                                                                       device = device,
-                                                                       repeat = False)
-        
-        data_loader['word_idx'] = text.vocab.itos
-        data_loader['x_type'] = torch.cuda.LongTensor if args.cuda else torch.LongTensor
-        data_loader['y_type'] = torch.cuda.LongTensor if args.cuda else torch.LongTensor
-        data_loader['max_total_num_words'] = max_total_num_words
-        data_loader['embedding_dim'] = embedding_dim
-        data_loader['max_num_words'] = 50
-        data_loader['max_num_sents'] = int(next(iter(train_loader)).text.size(-1) / data_loader['max_num_words'])
+    # elif name in ['imdb', 'IMDB']:
+    #
+    #     embedding_dim = 100
+    #     max_total_num_words = 20000
+    #     text = data.Field(tokenize = tokenizer_twolevel,
+    #                       batch_first = True)
+    #     label = data.Field(lower = True)
+    #     label_pred = data.Field(use_vocab = False, fix_length = 1)
+    #     fname = data.Field(use_vocab = False, fix_length = 1)
+    #
+    #     train, valid, test = IMDB_modified.splits(text, label, label_pred, fname,
+    #                                               root = root, model_name = args.model_name,
+    #                                               load_pred = args.load_pred)
+    #     print("build vocab...")
+    #     text.build_vocab(train, vectors = GloVe(name = '6B',
+    #                                             dim = embedding_dim,
+    #                                             cache = root), max_size = max_total_num_words)
+    #     label.build_vocab(train)
+    #
+    #     print("Create Iterator objects for multiple splits of a dataset...")
+    #     train_loader, valid_loader, test_loader = data.Iterator.splits((train, valid, test),
+    #                                                                    batch_size = batch_size,
+    #                                                                    device = device,
+    #                                                                    repeat = False)
+    #
+    #     data_loader['word_idx'] = text.vocab.itos
+    #     data_loader['x_type'] = torch.cuda.LongTensor if args.cuda else torch.LongTensor
+    #     data_loader['y_type'] = torch.cuda.LongTensor if args.cuda else torch.LongTensor
+    #     data_loader['max_total_num_words'] = max_total_num_words
+    #     data_loader['embedding_dim'] = embedding_dim
+    #     data_loader['max_num_words'] = 50
+    #     data_loader['max_num_sents'] = int(next(iter(train_loader)).text.size(-1) / data_loader['max_num_words'])
 
     else : raise UnknownDatasetError()
     
