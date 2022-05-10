@@ -1,4 +1,7 @@
 .idea/*
 .idea/
-*/dataset
-*/model
+*/models
+
+# dataset
+/mnist/dataset
+/imdb/dataset

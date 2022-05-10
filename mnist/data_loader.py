@@ -8,6 +8,7 @@ import torch
 import codecs
 from torchvision.datasets.utils import download_url
 
+
 class MNIST_modified(data.Dataset):
     """`MNIST <http://yann.lecun.com/exdb/mnist/>`_ Dataset.
     Args:
@@ -23,7 +24,7 @@ class MNIST_modified(data.Dataset):
         target_transform (callable, optional): A function/transform that takes in the
             target and transforms it.
     """
-    
+
     urls = [
         'http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz',
         'http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz',
@@ -39,17 +40,24 @@ class MNIST_modified(data.Dataset):
                '5 - five', '6 - six', '7 - seven', '8 - eight', '9 - nine']
     class_to_idx = {_class: i for i, _class in enumerate(classes)}
 
+    def __iter__(self):
+        start = 1
+        end = 10
+
+        return iter(self.__getitem__(start, end))
+
     @property
     def targets(self):
 
         if self.mode is 'train':
             return self.train_labels
         elif self.mode is 'valid':
-            return self.valid_labels      
+            return self.valid_labels
         else:
             return self.test_labels
 
-    def __init__(self, root, mode = 'train', transform = None, target_transform = None, download = False, load_pred = False, model_name = 'original'):
+    def __init__(self, root, mode='train', transform=None, target_transform=None, download=False, load_pred=False,
+                 model_name='original'):
 
         self.root = os.path.expanduser(root)
         self.transform = transform
@@ -59,24 +67,24 @@ class MNIST_modified(data.Dataset):
         self.training_pred_file = model_name + '_pred_train.pt'
         self.valid_pred_file = model_name + '_pred_test.pt'
         self.test_pred_file = model_name + '_pred_valid.pt'
-        
-        if download:
-            self.download()
 
-        if not self._check_exists():
-            raise RuntimeError('Dataset not found.' +
-                               ' You can use download=True to download it')
+        # if download:
+        #     self.download()
+        #
+        # if not self._check_exists():
+        #     raise RuntimeError('Dataset not found.' +
+        #                        ' You can use download=True to download it')
 
         if self.mode is 'train':
-            self.train_data, self.train_labels = torch.load(
-                os.path.join(self.root, self.processed_folder, self.training_file))
-            self.train_predlabels = torch.load(
-                os.path.join(self.root, self.processed_folder, self.training_pred_file)) if load_pred else self.train_labels
+            # 直接加载整个数据集
+            self.train_data, self.train_labels = torch.load(os.path.join(self.root, self.processed_folder, self.training_file))
+            self.train_predlabels = torch.load(os.path.join(self.root, self.processed_folder,self.training_pred_file)) if load_pred else self.train_labels
         elif self.mode is 'valid':
             self.valid_data, self.valid_labels = torch.load(
-                os.path.join(self.root, self.processed_folder, self.valid_file))    
+                os.path.join(self.root, self.processed_folder, self.valid_file))
             self.valid_predlabels = torch.load(
-                os.path.join(self.root, self.processed_folder, self.valid_pred_file)) if load_pred else self.valid_labels
+                os.path.join(self.root, self.processed_folder,
+                             self.valid_pred_file)) if load_pred else self.valid_labels
         elif self.mode is 'test':
             self.test_data, self.test_labels = torch.load(
                 os.path.join(self.root, self.processed_folder, self.test_file))
@@ -92,11 +100,13 @@ class MNIST_modified(data.Dataset):
         Returns:
             tuple: (image, target) where target is index of the target class.
         """
-        
+
         if self.mode is 'train':
-            img, target, pred = self.train_data[index], self.train_labels[index], self.train_predlabels[index] 
+            # read file -> numpy array -> tensor
+
+            img, target, pred = self.train_data[index], self.train_labels[index], self.train_predlabels[index]
         elif self.mode is 'valid':
-            img, target, pred = self.valid_data[index], self.valid_labels[index], self.valid_predlabels[index]    
+            img, target, pred = self.valid_data[index], self.valid_labels[index], self.valid_predlabels[index]
         elif self.mode is 'test':
             img, target, pred = self.test_data[index], self.test_labels[index], self.test_predlabels[index]
         else:
@@ -111,29 +121,28 @@ class MNIST_modified(data.Dataset):
 
         if self.target_transform is not None:
             target = self.target_transform(target)
-        
+
         return img, target, pred, index
 
     def __len__(self):
-        
+
         if self.mode is 'train':
             return len(self.train_data)
         elif self.mode is 'valid':
-            return len(self.valid_data)   
+            return len(self.valid_data)
         elif self.mode is 'test':
             return len(self.test_data)
         else:
             raise RuntimeError("mode error. 'mode' should be either train, valid, or test")
-            
 
     def _check_exists(self):
         return os.path.exists(os.path.join(self.root, self.processed_folder, self.training_file)) and \
-            os.path.exists(os.path.join(self.root, self.processed_folder, self.test_file)) and \
-            os.path.exists(os.path.join(self.root, self.processed_folder, self.valid_file))
+               os.path.exists(os.path.join(self.root, self.processed_folder, self.test_file)) and \
+               os.path.exists(os.path.join(self.root, self.processed_folder, self.valid_file))
 
     def download(self):
         """Download the MNIST data if it doesn't exist in processed_folder already."""
-        #from six.moves import urllib
+        # from six.moves import urllib
         import gzip
 
         if self._check_exists():
@@ -166,28 +175,29 @@ class MNIST_modified(data.Dataset):
             read_image_file(os.path.join(self.root, self.raw_folder, 'train-images-idx3-ubyte')),
             read_label_file(os.path.join(self.root, self.raw_folder, 'train-labels-idx1-ubyte'))
         )
-        
+
         # Define the indices
         indices = list(range(len(training_valid_set[0])))
         if os.path.exists(os.path.join(self.root, self.processed_folder, 'valid_idx.npy')):
             valid_idx = np.load(os.path.join(self.root, self.processed_folder, 'valid_idx.npy'))
-        else: 
-            valid_idx = np.random.choice(indices, size = 10000, replace = False)
+        else:
+            valid_idx = np.random.choice(indices, size=10000, replace=False)
             np.save(os.path.join(self.root, self.processed_folder, 'valid_idx.npy'), valid_idx)
         train_idx = list(set(indices) - set(valid_idx))
-        
+
         training_set = (
             training_valid_set[0][train_idx],
-            training_valid_set[1][train_idx] 
+            training_valid_set[1][train_idx]
         )
         valid_set = (
             training_valid_set[0][valid_idx],
-            training_valid_set[1][valid_idx] 
+            training_valid_set[1][valid_idx]
         )
         test_set = (
             read_image_file(os.path.join(self.root, self.raw_folder, 't10k-images-idx3-ubyte')),
             read_label_file(os.path.join(self.root, self.raw_folder, 't10k-labels-idx1-ubyte'))
         )
+        # 在这保存pt
         with open(os.path.join(self.root, self.processed_folder, self.training_file), 'wb') as f:
             torch.save(training_set, f)
         with open(os.path.join(self.root, self.processed_folder, self.valid_file), 'wb') as f:
@@ -209,6 +219,7 @@ class MNIST_modified(data.Dataset):
         fmt_str += '{0}{1}'.format(tmp, self.target_transform.__repr__().replace('\n', '\n' + ' ' * len(tmp)))
         return fmt_str
 
+
 def get_int(b):
     return int(codecs.encode(b, 'hex'), 16)
 
@@ -226,9 +237,9 @@ def read_image_file(path):
     with open(path, 'rb') as f:
         data = f.read()
         assert get_int(data[:4]) == 2051
-        length = get_int(data[4:8])
-        num_rows = get_int(data[8:12])
-        num_cols = get_int(data[12:16])
-        #images = []
+        length = get_int(data[4:8])  # 样本数量int
+        num_rows = get_int(data[8:12])  # x
+        num_cols = get_int(data[12:16])  # y
+        # images = []
         parsed = np.frombuffer(data, dtype=np.uint8, offset=16)
         return torch.from_numpy(parsed).view(length, num_rows, num_cols)
