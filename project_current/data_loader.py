@@ -69,6 +69,7 @@ class MappingDataset(Dataset):
             file_name = path.split(os.sep)[-1].split('.')[0]
             labels.loc[(labels['images'] == file_name), "path"] = path
 
+        labels = labels.loc[labels["path"] != '']
         labels.to_csv(path_or_buf=map_file_path, columns=['path', 'labels'], header=False, index=False)
 
 
@@ -82,4 +83,3 @@ if __name__ == '__main__':
     for idx, (img, label) in enumerate(train_loader):
         print(img.shape)
         print(label)
-
